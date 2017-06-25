@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Untitled Document</title>
+    <title>有機作物種植面積散布圖</title>
     <script src="https://d3js.org/d3.v3.js"></script>
     <style>
         body {
@@ -34,6 +34,10 @@
             border-radius: 5px;
             box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
         }
+		select{
+			font-size:16px;
+			width:120px;
+		}
     </style>
 </head>
 
@@ -109,8 +113,10 @@
             uIndustryArr=['總合','水稻','蔬菜','水果','茶','其他']
 
             //改成選單
-			d3.select("#ims").append("br");
-			d3.select("#ims").append("span").text("請選擇統計作物別");
+			d3.select("#ims").append("br");d3.select("#ims").append("br");
+			d3.select("#ims").append("span").text("請選擇統計作物別：").style({
+				'font-size':'16px',
+            });
             var selection = d3.select("#ims")
                 .append("select")
                 .selectAll("option")
@@ -231,7 +237,7 @@
 
             var xScale = d3.time.scale()
                 .domain([
-                    new Date("2004-01-01"),
+                    new Date("2003-10-01"),
                     new Date("2015-01-01")
                 ])
                 .range([p, w - p]);
