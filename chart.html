@@ -32,7 +32,7 @@
             height: auto;
             padding: 0px 10px;
             border-radius: 5px;
-            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 5px 5px 10px rgba(50, 50, 50, 0.5);
         }
 		select{
 			font-size:16px;
@@ -297,20 +297,17 @@
                     cy: function(d) {
                         return yScale(d.total_count);
                     },
-                    r: function(d) {
-                        return rScale(d.total_area);
-                    },
+                    r: 2,
                     fill: function(d) {
                         return fScale(d.city);
                     }
                 }).on("mouseover", function(d) {
                     var posX = +d3.select(this).attr("cx");
                     var posY = +d3.select(this).attr("cy");
-
                     var tooltip = d3.select("#tooltip")
                         .style({
-                            left: (posX + 20) + "px",
-                            top: (posY + 20) + "px"
+                            left: (posX + 35) + "px",
+                            top: (posY + 100) + "px"
                         })
                         .classed("hidden", false);
                     tooltip.select("#city").text(function(){
@@ -322,9 +319,27 @@
 					tooltip.select("#area").text(function(){
                         return '種植面積:'+(d.total_area);
                     });
+					d3.select("#ims>svg").append("line").attr({
+						id:'linex',
+						x1:0,
+						x2:w,
+						y1:posY,
+						y2:posY,
+						stroke:function(){
+                        return fScale(d.city);
+                    }
+					});
+
                 }).on("mouseout", function() {
                     d3.select("#tooltip").classed("hidden", true);
-                });
+					d3.select("#linex").remove();
+                }).transition()
+               .duration(1000)
+                .attr({
+                    r:function(d) {
+                        return rScale(d.total_area);
+                    }
+                });;
         }
 function formatFloat(num, pos)
 {
