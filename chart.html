@@ -27,12 +27,13 @@
             position: absolute;
             /* left: 20px; */
             /* top:  100px; */
-            background: #fff;
-            width: 150px;
+            width: 190px;
             height: auto;
             padding: 0px 10px;
             border-radius: 5px;
-            box-shadow: 5px 5px 10px rgba(50, 50, 50, 0.5);
+			background:#666;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+			color:#fff;
         }
 		select{
 			font-size:16px;
@@ -55,6 +56,7 @@
         var w = 900;
         var h = 600;
         var p = 60;
+		var now_city;
         var letterList = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "M", "N", "O", "P", "Q", "T", "U", "V", "W", "X", "Z"];
 
         //2. 建立svg()畫布環境
@@ -69,7 +71,7 @@
 			
             bind(allData);
             render(allData);
-            btnList(dataSet);
+            btnList(allData);
 			
         });
 
@@ -110,7 +112,7 @@
         }
         //產生作物按鈕
         function btnList(dataSet) {
-            uIndustryArr=['總合','水稻','蔬菜','水果','茶','其他']
+            cityArr=['總合','水稻','蔬菜','水果','茶','其他']
 
             //改成選單
 			d3.select("#ims").append("br");d3.select("#ims").append("br");
@@ -118,7 +120,29 @@
 				'font-size':'16px',
             });
             var selection = d3.select("#ims")
-                .append("select")
+                .append("select").attr({
+					id:'select1',
+				})
+                .selectAll("option")
+                .data(cityArr);
+            selection.enter().append("option");
+            selection.exit().remove();
+			d3.select("#ims").append("span").attr({id:'textcity'}).text("請選擇統計縣市：").style({
+				'font-size':'16px',
+            });
+
+			var industryArr = dataSet.map(function(d) {
+                return d.city;
+            });
+
+			var uIndustryArr = unique(industryArr).filter(function(d) {
+                return d.city != "";
+			});
+			
+			var selection = d3.select("#ims")
+                .append("select").attr({
+					id:'select2',
+				})
                 .selectAll("option")
                 .data(uIndustryArr);
             selection.enter().append("option");
@@ -126,9 +150,19 @@
 
 
 
-
             //------- render -------
-            d3.selectAll("#ims>select>option")
+            d3.selectAll("#ims>#select1>option")
+                .attr({
+                    value: function(d) {
+						
+                        return d;
+                    }
+                })
+                .text(function(d) {
+                    return d;
+                });
+				
+			d3.selectAll("#ims>#select2>option")
                 .attr({
                     value: function(d) {
                         return d;
@@ -137,11 +171,29 @@
                 .text(function(d) {
                     return d;
                 });
+				
+			d3.select("#select2")
+                .insert("option", ":first-child")
+                .attr({
+                    value: "全部縣市",
+					selected:'selected',
+                })
+                .text("全部縣市");
 
-
-            d3.select('select').on("change", function(d) {
-                var value = d3.select('select').property("value");
-                update(value);
+            d3.select('#select1').on("change", function(d) {
+                var value = d3.select('#select1').property("value");
+				var city = d3.select('#select2').property("value");
+                update(value,'');
+				var name = d3.select("#namest");
+                name.text(value);
+            });
+			d3.select('#select2').on("change", function(d) {
+                var value = d3.select('#select1').property("value");
+				var city = d3.select('#select2').property("value");
+				if(city=='全部縣市')
+					update(value,'');
+				else
+                	update(value,city);
 				var name = d3.select("#namest");
                 name.text(value);
             });
@@ -149,44 +201,172 @@
 
 
         }
+		function update_citylist(dataSet){
+			d3.select('#textcity').remove();
+			d3.select('#select2').remove();
+			
+			d3.select("#ims").append("span").attr({id:'textcity'}).text("請選擇統計縣市：").style({
+				'font-size':'16px',
+            });
+			dataSet_city=dataSet.filter(function(d) {
+			
+				return d.total_count >0 && d.total_area>0;
+			});
+			console.log(dataSet_city);
+			var industryArr = dataSet_city.map(function(d) {
+                return d.city;
+            });
 
-        function update(industryName) {
-			console.log(industryName);
+			var uIndustryArr = unique(industryArr).filter(function(d) {
+                return d.city != "";
+			});
+			
+			var selection = d3.select("#ims")
+                .append("select").attr({
+					id:'select2',
+				})
+                .selectAll("option")
+                .data(uIndustryArr);
+            selection.enter().append("option");
+            selection.exit().remove();
+			
+			d3.selectAll("#ims>#select2>option")
+                .attr({
+                    value: function(d) {
+                        return d;
+                    },
+					selected:function(d){
+						if(d==now_city)
+							return 'selected';
+					}
+                })
+                .text(function(d) {
+                    return d;
+                });
+			
+		
+			if(now_city=='全部縣市'){
+				d3.select("#select2")
+                .insert("option", ":first-child")
+                .attr({
+                    value: "全部縣市",
+					selected:'selected',
+                })
+                .text("全部縣市");
+			}
+			else{
+				d3.select("#select2")
+                .insert("option", ":first-child")
+                .attr({
+                    value: "全部縣市"
+                })
+                .text("全部縣市");
+			}
+			d3.select('#select2').on("change", function(d) {
+                var value = d3.select('#select1').property("value");
+				var city = d3.select('#select2').property("value");
+				now_city=city;
+                if(city=='全部縣市')
+					update(value,'');
+				else
+                	update(value,city);
+					
+				var name = d3.select("#namest");
+                name.text(value);
+            });
+
+		}
+        function update(industryName,city) {
+			if(city=='')
+				now_city='全部縣市';
             switch(industryName){
 				case '總合':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_total, function(dataSet) {
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 				case '水稻':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_rice, function(dataSet) {	
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 				case '蔬菜':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_vegetables, function(dataSet) {
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+					
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 				case '水果':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_fruit, function(dataSet) {	
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 				case '茶':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_tea, function(dataSet) {	
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 				case '其他':
 				d3.csv("https://a706124.github.io/end_of_period/COA_OpenData.csv", mid_other, function(dataSet) {	
-					bind(dataSet);
-					render(dataSet);
+					if(city!=''){
+						var newdataSet = dataSet.filter(function(d) {
+							return d.city == city;
+						});
+					}
+					else
+						newdataSet=dataSet;
+
+					bind(newdataSet);
+					render(newdataSet);
+					update_citylist(dataSet);
 				});
 				break;
 			}
@@ -295,7 +475,7 @@
                         return xScale(new Date((Number(d.year)+1911)+'-01-01'));
                     },
                     cy: function(d) {
-                        return yScale(d.total_count);
+                        return 300+yScale(d.total_count);
                     },
                     r: 2,
                     fill: function(d) {
@@ -314,10 +494,10 @@
                         return d.city;
                     });
                     tooltip.select("#count").text(function(){
-                        return '種植數量:'+(d.total_count);
+                        return '種植戶數:'+(d.total_count)+'戶';
                     });
 					tooltip.select("#area").text(function(){
-                        return '種植面積:'+(d.total_area);
+                        return '種植面積:'+formatFloat((d.total_area),2)+'公頃';
                     });
 					d3.select("#ims>svg").append("line").attr({
 						id:'linex',
@@ -334,11 +514,15 @@
                     d3.select("#tooltip").classed("hidden", true);
 					d3.select("#linex").remove();
                 }).transition()
-               .duration(1000)
+               .duration(1500)
                 .attr({
                     r:function(d) {
                         return rScale(d.total_area);
-                    }
+                    },
+					cy:function(d) {
+                        return yScale(d.total_count);
+                    },
+
                 });;
         }
 function formatFloat(num, pos)
